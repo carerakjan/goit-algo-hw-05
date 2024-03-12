@@ -1,27 +1,5 @@
-def parse_input(user_input):
-    cmd, *args = user_input.split()
-    cmd = cmd.strip().lower()
-    return cmd, *args
+from handlers import parse_input, add_contact, change_contact, show_phone, show_all
 
-
-def add_contact(args, contacts):
-    name, phone = args
-    contacts[name] = phone
-    return "Contact added."
-
-
-def change_contact(args, contacts):
-    name, phone = args
-    contacts[name] = phone
-    return 'Contact updated.'
-
-
-def show_phone(args, contacts):
-    return contacts[args[0]]
-
-
-def show_all(contacts):
-    return '\n'.join([f'{name}, {num}' for name, num in contacts.items()])
 
 
 def main():
