@@ -1,7 +1,6 @@
 from handlers import parse_input, add_contact, change_contact, show_phone, show_all
 
 
-
 def main():
     contacts = {}
     print("Welcome to the assistant bot!")
