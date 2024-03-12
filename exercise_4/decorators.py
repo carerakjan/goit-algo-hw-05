@@ -10,7 +10,6 @@ def input_error(old_func):
     return new_func
 
 
-
 def parse_error(old_func):
     def new_func(*args, **wargs):
         try:

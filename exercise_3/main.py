@@ -2,35 +2,21 @@ import sys
 from pathlib import Path
 from collections import namedtuple, defaultdict
 
-Log_line = namedtuple('Log_line', ['date', 'time', 'level', 'description'])
-Log_level = namedtuple('Log_level', ['info', 'debug', 'error', 'warning'])
-
-log_level = Log_level('INFO', 'DEBUG', 'ERROR', 'WARNING')
-
-log_levels = defaultdict(str)
-log_levels['-i'] = log_level.info
-log_levels['--info'] = log_level.info
-log_levels['-d'] = log_level.debug
-log_levels['--debug'] = log_level.debug
-log_levels['-e'] = log_level.error
-log_levels['--error'] = log_level.error
-log_levels['-w'] = log_level.warning
-log_levels['--warning'] = log_level.warning
+LogLine = namedtuple('LogLine', ['date', 'time', 'level', 'description'])
+log_levels = ('INFO', 'DEBUG', 'ERROR', 'WARNING')
 
 
-def parse_log_line(line: str) -> Log_line:
+def parse_log_line(line: str) -> LogLine:
     date, time, level, *rest = line.split(' ')
-    log_line = Log_line(date, time, level, ' '.join(rest))
-
-    return log_line
+    return LogLine(date, time, level, ' '.join(rest))
 
 
 def load_logs(file_path: str) -> list:
     path = Path(file_path)
 
-    if path.exists():
-        file = path.read_text('utf-8')
-        return [parse_log_line(line.strip()) for line in file.split('\n') if line.strip()]
+    if path.exists() and path.is_file():
+        with open(path.resolve(), 'r', encoding='utf-8') as file:
+            return [parse_log_line(line.strip()) for line in file if line.strip()]
 
     return []
 
@@ -57,31 +43,22 @@ def display_log_counts(counts: dict):
 
 def main():
     try:
-        _, *params = sys.argv
-        file_path_param, *level_param = params
-        level_param = level_param[0] if len(level_param) > 0 else ''
-        level_from_map = log_levels[level_param]
+        logs = load_logs(sys.argv[1])
+        log_level_filter = sys.argv[2] if len(sys.argv) > 2 else ''
 
-        if level_param and not level_from_map:
-            print(f'Second parameter "{level_param}" is incorrect.')
-            keys = ', '.join(list(log_levels.keys())[:-1])
-            print(f'Available values are: "{keys}"')
-            return
+        if len(logs) > 0:
+            display_log_counts(count_logs_by_level(logs))
 
-        if file_path_param:
-            logs = load_logs(file_path_param)
-            if len(logs):
-                display_log_counts(count_logs_by_level(logs))
+            if log_level_filter:
+                log_level_upper = log_level_filter.upper()
 
-                if level_from_map:
-                    print(f"\nДеталі логів для рівня '{level_from_map}':")
-                    for log in filter_logs_by_level(logs, level_from_map):
+                if log_level_upper in log_levels:
+                    print(f"\nДеталі логів для рівня '{log_level_upper}':")
+                    for log in filter_logs_by_level(logs, log_level_upper):
                         print(f'{log.date} {log.time} - {log.description}')
-            else:
-                print('Logs are empty or bad file path.')
         else:
-            print('Logs file name is not specified.')
-    except ValueError:
+            print('Logs are empty or file path is incorrect.')
+    except IndexError:
         print('Enter logs file path.')
 
 
